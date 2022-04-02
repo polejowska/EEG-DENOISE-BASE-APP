@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 class EEGGenerator(object):
@@ -97,3 +98,14 @@ class EEGGenerator(object):
         plt.ylabel("Amplitude") 
         plt.plot(signal)
         plt.savefig('static/signal.png')
+
+    def save_to_csv(self, signal):
+        """Save to csv file.
+        """
+        dict = {
+            "eeg signal": signal
+        }
+        df = pd.DataFrame(dict)
+        csv_file = open("static/signal.csv", mode="w")
+        df.to_csv(csv_file)
+        csv_file.close()

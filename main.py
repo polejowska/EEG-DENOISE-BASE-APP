@@ -25,6 +25,7 @@ async def eeg_generator(request: Request):
     eeg_generator = EEGGenerator(fs=256, start_time=0, end_time=10)
     signal = eeg_generator.simulate_eeg()
     eeg_generator.visualize(signal)
+    eeg_generator.save_to_csv(signal)
     return templates.TemplateResponse("synthetic-eeg-generator.html", {"request": request})
 
 @app.get('/eeg-loader')
