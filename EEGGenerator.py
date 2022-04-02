@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import scipy.signal
 import pandas as pd
 
 
@@ -90,6 +91,31 @@ class EEGGenerator(object):
 
         return eeg_signal
 
+    def simulate_multichannel_eeg(self, artifact=None):
+        low_peak_amplitude_value = -10
+        high_peak_amplitude_value = 10
+
+        alpha_waves = self.create_signal(start_time=self.start_time, end_time=self.end_time, fs=self.fs, 
+            low_peak_amplitude_value=low_peak_amplitude_value,
+            high_peak_amplitude_value=high_peak_amplitude_value,
+            low_frequency=8.0, high_frequency=13.0)  
+
+        blink = self.create_blink_artifact()
+
+        frontal = blink * 200 + alpha_waves
+        central = blink * 100 + alpha_waves
+        parietal = blink * 10 + alpha_waves
+
+        eeg_signal = np.stack([frontal, central, parietal]).T  # shape = (100, 3)
+
+        return eeg_signal
+
+    def create_blink_artifact(self):
+        blink = np.zeros(self.n_samples)
+        blink[self.n_samples//2::200] += -1
+        blink = scipy.signal.lfilter(*scipy.signal.butter(2, [1*2/self.fs, 10*2/self.fs], 'bandpass'), blink)
+        return blink
+
     def visualize(self, signal):
         """Plot the signal.
         """
@@ -98,6 +124,15 @@ class EEGGenerator(object):
         plt.ylabel("Amplitude") 
         plt.plot(signal)
         plt.savefig('static/signal.png')
+
+    def visualize_multichannel(self, signal):
+        plt.subplot(3, 1, 1)
+        plt.plot(signal[:,0] + 50)
+        plt.plot(signal[:,1]+ 100)
+        plt.plot(signal[:,2] + 150)
+        plt.yticks([50, 100, 150], ['Fz', 'Cz', 'Pz'])
+        plt.ylabel('Channels')
+        plt.savefig('static/signal_multi.png') 
 
     def save_to_csv(self, signal):
         """Save to csv file.
